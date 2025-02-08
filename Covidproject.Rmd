@@ -1,0 +1,72 @@
+---
+title: ""
+author: "Michael Hua"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Filter the dataset for two countries of your choice and extract data from a specific data range (e.g. 2022-01-01 to 2022-12-31 Columns to focus on: location, date, new cases, new deaths (you can choose different columns if you would like to) Calculate the total number of cases and total number of deaths during that time.
+
+This program selects two countries and extracts data between New Zealand and Bulgaria from January 2022 to January 2023.
+
+Search by location, date, new cases, new deaths
+
+```{r}
+library(dplyr)
+covid_data <- read.csv("owid-covid-data.csv") 
+
+#filters data between 2022-01-01 and 2022-12-31 for the countries Bulgaria and New Zealand
+filtered_covid_data <- covid_data %>%
+  filter(location %in% c("New Zealand", "Bulgaria") & date >= "2022-01-01" & date <= "2023-01-01") %>% #filters by date and country
+  select(location, date, new_cases, new_deaths, total_deaths_per_million) #makes set only include these columns
+
+#finds total cases and deaths accumulated during 2022-01-01 and 2022-12-31
+summary_covid_data <- filtered_covid_data %>% 
+  group_by(location) %>% #separates the two countries
+  summarise(total_cases_filtered = sum(new_cases), total_deaths_filtered = sum(new_deaths)) #sums all new cases and deaths during the period
+
+print(filtered_covid_data)
+print(summary_covid_data)
+```
+
+1.  **Regional Vaccination Rate - Compare total vaccinations per hundred across continents.**
+
+    1.  **Filter the data set for a specific date.**
+
+    2.  **Group_by() , then get mean vaccination rate.**
+
+    3.  **Plot continents vs. vaccination rates.**
+
+    4.  **Draw some conclusions. Which continents have a higher rate? Why?**
+
+``` {r}
+library(dplyr)
+library(ggplot2)
+covid_data <- read.csv("owid-covid-data.csv")
+filtered_data_set = covid_data %>%
+  filter(date == "2023-01-01", continent !="") %>%  
+  #filters by the specific date, removes data not considered in continents
+  group_by(continent) %>%
+  summarise(mean_vaccination_rate = mean(total_vaccinations_per_hundred, na.rm = TRUE))
+#creates new data frame for grouped variable continent, 
+#calculates mean vaccination rate, excluding NA values
+print(filtered_data_set)
+
+ggplot(filtered_data_set, aes(x = continent, y = mean_vaccination_rate, fill = continent)) + 
+  #adds x and y labels, color-codes continents
+  geom_bar(stat = "identity") + #adds the bar in the box plot
+  labs(
+    title = "Mean Total Vaccinations per Hundred by Continent", 
+    x = "Continent", 
+    y = "Mean Vaccination Rate per Hundred",
+    caption = "Source: covid data from somewhere")
+
+```
+Conclusions:
+South America has the highest mean vaccination rate per hundred, 
+followed by Oceania, North America, Europe, Asia, and Africa.
+Some factors of this may include economic differences (some countries must purchase vaccines),
+the time period (it's 2023, and vaccination rates differ by the day), and
+availability (how easy it is to get the vaccine)
+https://english.elpais.com/usa/2022-01-13/how-south-america-became-a-global-leader-in-covid-19-vaccination.html?outputType=amp 
